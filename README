@@ -1,0 +1,24 @@
+mmapi
+
+A python client library for the Multimap API. Uses Multimap's REST web service for the following services:
+
+- Geocoding
+- Routing
+- Spatial Search (Where's my nearest?)
+
+Quick example to get started:
+------------------------------
+
+from mmapi import MMAddress, MMGeocoder
+
+geocoder = MMGeocoder( API_KEY )
+address = MMAddress( { 'qs': 'london', 'country_code': 'gb' } )
+result = geocoder.geocode( address )
+
+For further examples, see mmapi_test.py
+
+Planned enhancements
+--------------------
+
+* Update class __init__s to except Python style named arguments as well as dicts.
+* Support calling Multimap business grade services.
