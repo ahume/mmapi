@@ -2,9 +2,11 @@ from distutils.core import setup
 
 setup(
     name = 'mmapi',
-    version = '0.1',
+    version = '0.2',
     description = 'Client library for the Multimap Web Service API',
     author = 'Andy Hume',
+    author_email = 'andyhume@gmail.com',
+    url = 'http://github.com/ahume/mmapi',
     download_url = 'http://github.com/ahume/mmapi/tarball/master',
     keywords = ['geocoder', 'routing', 'spatial', 'multimap'],
     classifiers = [

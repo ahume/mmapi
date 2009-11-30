@@ -98,7 +98,7 @@ class testMMBounds(unittest.TestCase):
         bounds1 = MMBounds( MMLatLon( -10.0, -10.0 ), MMLatLon( 10.0, 10.0 ) )
         bounds2 = MMBounds( MMLatLon( -10.0, -10.0 ) )
         bounds3 = MMBounds( None, MMLatLon( 10.0, 10.0 ) )
-        bounds4 = MMBounds( MMLocation( MMLatLon( -10.0, -10.0 ) ), MMLocation( MMLatLon( 10.0, 10.0 ) ) )
+        bounds4 = MMBounds( MMLocation( coords=MMLatLon( -10.0, -10.0 ) ), MMLocation( coords=MMLatLon( 10.0, 10.0 ) ) )
         bounds5 = MMBounds( MMLatLon( -10.0, 10.0 ), MMLatLon( 10.0, -10.0 ) )
         
         self.assertEqual('(-10.0,-10.0)', bounds1.getSouthWest().to_string(), "Basic assignment of SW broken.")
@@ -140,7 +140,8 @@ class testMMAddress(unittest.TestCase):
     """Tests MMAddress objects and methods."""
     
     def setUp(self):
-        self.address = MMAddress( ADDRESS )
+        self.address = MMAddress( street=STREET, city=CITY, areas=AREAS, region=REGION, state=STATE, postal_code=POSTAL_CODE,
+                                  zip_code=ZIP, display_name=DISPLAY_NAME, country_code=COUNTRY_CODE, qs=QS_UNIQUE)
     
     def test_to_api_query(self):
         """MMAddress.to_api_query() should return query string for API request."""
@@ -185,27 +186,27 @@ class testMMLocation(unittest.TestCase):
         
     def test_lat_lon_constructor(self):
         """MMLocation.__init__(LAT, LON) should create object with correct structure, types and values"""
-        location = MMLocation( LAT, LON )
+        location = MMLocation( lat=LAT, lon=LON )
         self.assertTrue(type(location['coords']) is MMLatLon )
         self.assertEqual(location['coords']['lat'], LAT)
         self.assertEqual(location['coords']['lon'], LON)
         
     def test_lat_lon_object_constructor(self):
         """MMLocation.__init__(MMLatLon) should create object with correct structure, types and values"""
-        location = MMLocation( MMLatLon(LAT, LON) )
+        location = MMLocation( coords=MMLatLon(LAT, LON) )
         self.assertTrue(type(location['coords']) is MMLatLon )
         self.assertEqual(location['coords']['lat'], LAT)
         self.assertEqual(location['coords']['lon'], LON)
     
     def test_qs_constructor(self):
         """MMLocation.__init__(qs) should create object with correct structure, types and values"""
-        location = MMLocation( 'se22' )
+        location = MMLocation( qs='se22' )
         self.assertTrue(type(location['address']) is MMAddress )
         self.assertEqual(location['address']['qs'], 'se22')
         
     def test_address_constructor(self):
         """MMLocation.__init__(MMAddress) should create object with correct structure, types and values"""
-        location = MMLocation( MMAddress( { 'qs': 'se22', 'country_code': 'gb' }) )
+        location = MMLocation( address=MMAddress(qs='se22', country_code='gb') )
         self.assertTrue(type(location['address']) is MMAddress )
         self.assertEqual(location['address']['qs'], 'se22')
         
@@ -213,7 +214,7 @@ class testMMLocation(unittest.TestCase):
         """MMLocation.__init__(MMSearch) should create object with correct structure, types and values"""
         search = MMSearch()
         search['point'] = MMLatLon( LAT, LON )
-        location = MMLocation( search )
+        location = MMLocation( search=search )
         self.assertTrue(type(location['search']) is MMSearch )
         self.assertTrue(type(location['search']['point']) is MMLatLon )
         self.assertEqual(location['search']['point']['lat'], LAT )
@@ -222,16 +223,16 @@ class testMMLocation(unittest.TestCase):
         """MMLocation.__init__(MMRoute) should create object with correct structure, types and values"""
         route = MMRoute( [] )
         route['mode'] = 'driving'
-        location = MMLocation( route )
+        location = MMLocation( route=route )
         self.assertTrue(type(location['route']) is MMRoute )
         self.assertEqual(location['route']['mode'], 'driving' )
         
     def test_multiple_object_constructor(self):
         """MMLocation.__init__(MMSearch, MMAddress) should create object with correct structure, types and values"""
-        address = MMAddress( { 'qs': 'se22', 'country_code': 'gb' } )
+        address = MMAddress(qs='se22', country_code='gb')
         search = MMSearch()
         search['point'] = MMLatLon( LAT, LON )
-        location = MMLocation( search, address )
+        location = MMLocation( search=search, address=address )
         self.assertTrue(type(location['address']) is MMAddress )
         self.assertEqual(location['address']['qs'], 'se22')
         self.assertTrue(type(location['search']) is MMSearch )
@@ -248,7 +249,7 @@ class testGeocoder(unittest.TestCase):
     
     def test_london(self):
         """MMGeocoder.request() should return geocoder response object with unique location result, and correct structure, types and values"""
-        address = MMAddress( { 'qs': 'london', 'country_code': 'gb' } )
+        address = MMAddress(qs='london', country_code='gb')
         result = self.geocoder.geocode( address )
         
         self.assertEqual(result['location_count'], 1)
@@ -269,7 +270,7 @@ class testGeocoder(unittest.TestCase):
     def test_sutton(self):
         """MMGeocoder.request() should return geocoder response object with disambiguation result, and correct structure, types and values"""
         
-        address = MMAddress( { 'qs': 'sutton', 'country_code': 'gb' } )
+        address = MMAddress(qs='sutton', country_code='gb')
         result = self.geocoder.geocode( address )
         
         self.assertEqual(result['error_code'], 'MM_GEOCODE_MULTIPLE_MATCHES')
@@ -291,7 +292,7 @@ class testGeocoder(unittest.TestCase):
     def test_not_found(self):
         """MMGeocoder.request() should return geocoder response object with no matches result, and correct structure, types and values"""
         
-        address = MMAddress( { 'qs': 'herebedragons', 'country_code': 'gb' } )
+        address = MMAddress(qs='herebedragons', country_code='gb')
         result = self.geocoder.geocode( address )
         
         self.assertEqual(result['error_code'], 'MM_GEOCODE_NO_MATCHES')
@@ -301,8 +302,8 @@ class testMMRoute(unittest.TestCase):
     """Tests MMRoute object and methods"""
     
     def setUp(self):
-        location_1 = MMLocation( MMAddress( { 'qs': 'w1', 'country_code': 'GB' } ) )
-        location_2 = MMLocation( MMAddress( { 'qs': 'w2', 'country_code': 'GB' } ) )
+        location_1 = MMLocation( MMAddress(qs='w1', country_code='GB') )
+        location_2 = MMLocation( MMAddress(qs='w2', country_code='GB') )
         self.route = MMRoute( [location_1, location_2 ])
         self.route['mode'] = 'walking'
         self.route['optimize_for'] = 'distance'
@@ -330,8 +331,8 @@ class testMMRouteRequester(unittest.TestCase):
         
     def test_route(self):
         """MMRouteRequester.request() should return route response object with route result, and correct structure, types and values"""
-        location_1 = MMLocation( MMAddress( { 'qs': 'w1', 'country_code': 'GB' } ) )
-        location_2 = MMLocation( MMAddress( { 'qs': 'w2', 'country_code': 'GB' } ) )
+        location_1 = MMLocation( MMAddress(qs='w1', country_code='GB') )
+        location_2 = MMLocation( MMAddress(qs='w2', country_code='GB') )
         route = MMRoute( [location_1, location_2 ] )
         
         result = self.router.request(route)
@@ -346,8 +347,8 @@ class testMMRouteRequester(unittest.TestCase):
         
     def test_disambiguation(self):
         """MMRouteRequester.request() should return route response object with disamgiguation result and not found result, and correct structure, types and values"""
-        location_1 = MMLocation( MMAddress( { 'qs': 'herebedragons', 'country_code': 'GB' } ) )
-        location_2 = MMLocation( MMAddress( { 'qs': 'sutton', 'country_code': 'GB' } ) )
+        location_1 = MMLocation( MMAddress(qs='herebedragons', country_code='GB') )
+        location_2 = MMLocation( MMAddress(qs='sutton', country_code='GB') )
         route = MMRoute( [location_1, location_2 ] )
         
         result = self.router.request(route)
@@ -433,8 +434,8 @@ class testSearch(unittest.TestCase):
         
     def test_to_api_query_with_route(self):
         """MMSearch.to_api_query() should return query string for API request including route."""
-        location_1 = MMLocation( MMAddress( { 'qs': 'w1', 'country_code': 'GB' } ) )
-        location_2 = MMLocation( MMAddress( { 'qs': 'w2', 'country_code': 'GB' } ) )
+        location_1 = MMLocation( MMAddress(qs='w1', country_code='GB') )
+        location_2 = MMLocation( MMAddress(qs='w2', country_code='GB') )
         self.search['route'] = MMRoute( [location_1, location_2 ])
         qs = {'dataSource': DS_1, 'count': str(COUNT), 'lat': str(LAT), 'lon': str(LON), 'qs_1': 'w1', 'countryCode_1': 'GB', 'qs_2': 'w2', 'countryCode_2': 'GB' }
         self.assertEqual(self.search.to_api_query(), qs)

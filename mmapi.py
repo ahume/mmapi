@@ -104,7 +104,11 @@ def coord_to_tile(x, y, zoom):
 
 
 class MMLatLon(dict):
-    def __init__( self, lat=None, lon=None ):
+    """Represents a point as a lat/lon.
+    
+    >>> coord = MMLatLon(54.07678, -0.045345)
+    """
+    def __init__(self, lat=None, lon=None):
         self['lat'] = lat
         self['lon'] = lon
         
@@ -141,7 +145,13 @@ class MMLatLon(dict):
 
 
 class MMBounds(dict):
-    def __init__(self,south_west=None, north_east=None):
+    """Represents a bounding box of four map points.
+    
+    >>> sw = MMLatLon(54.07678, -0.045345)
+    >>> ne = MMLatLon(54.16543, -0.035345)
+    >>> bounds = MMBounds(sw, ne)
+    """
+    def __init__(self, south_west=None, north_east=None):
         self.reset(south_west, north_east)
         
     def reset(self,south_west=None, north_east=None):
@@ -286,18 +296,46 @@ class MMBounds(dict):
         return url
 
 class MMAddress(dict):
-    def __init__( self, addr=None ):
-        if addr is not None:
-            if addr.has_key('street'): self['street'] = addr['street']
-            if addr.has_key('city'): self['city'] = addr['city']
-            if addr.has_key('areas'): self['areas'] = addr['areas']
-            if addr.has_key('region'): self['region'] = addr['region']
-            if addr.has_key('state'): self['state'] = addr['state']
-            if addr.has_key('postal_code'): self['postal_code'] = addr['postal_code']
-            if addr.has_key('zip'): self['zip'] = addr['zip']
-            if addr.has_key('display_name'): self['display_name'] = addr['display_name']
-            if addr.has_key('country_code'): self['country_code'] = addr['country_code']
-            if addr.has_key('qs'): self['qs'] = addr['qs']
+    """Represents an address.
+    
+    >>> address = MMAddress(street="134 Oxford Street", city="London", country_code="gb" )
+    """
+    def __init__(self, street=None, city=None, areas=None, region=None, state=None, postal_code=None,
+                 zip_code=None, display_name=None, country_code=None, qs=None):
+        if street is not None:
+            self['street'] = street
+        if city is not None:
+            self['city'] = city
+        if areas is not None:
+            self['areas'] = areas
+        if region is not None:
+            self['region'] = region
+        if state is not None:
+            self['state'] = state
+        if postal_code is not None:
+            self['postal_code'] = postal_code
+        if zip_code is not None:
+            self['zip_code'] = zip_code
+        if display_name is not None:
+            self['display_name'] = display_name
+        if country_code is not None:
+            self['country_code'] = country_code
+        if qs is not None:
+            self['qs'] = qs
+    
+    def from_json(self, json):
+        if json is not None:
+            if json.has_key('street'): self['street'] = json['street']
+            if json.has_key('city'): self['city'] = json['city']
+            if json.has_key('areas'): self['areas'] = json['areas']
+            if json.has_key('region'): self['region'] = json['region']
+            if json.has_key('state'): self['state'] = json['state']
+            if json.has_key('postal_code'): self['postal_code'] = json['postal_code']
+            if json.has_key('zip'): self['zip_code'] = json['zip']
+            if json.has_key('display_name'): self['display_name'] = json['display_name']
+            if json.has_key('country_code'): self['country_code'] = json['country_code']
+            if json.has_key('qs'): self['qs'] = json['qs']
+        
     
     def to_api_query(self, postfix=''):
         url = {}
@@ -317,8 +355,8 @@ class MMAddress(dict):
             url['state' + postfix] = self['state']
         if self.has_key('postal_code'):
             url['postalCode' + postfix] = self['postal_code']
-        if self.has_key('zip'):
-            url['ZIP' + postfix] = self['zip']
+        if self.has_key('zip_code'):
+            url['ZIP' + postfix] = self['zip_code']
         if self.has_key('qs'):
             url['qs' + postfix] = self['qs']
         if self.has_key('country_code'):
@@ -328,38 +366,37 @@ class MMAddress(dict):
 
 
 class MMLocation(dict):
-    def __init__(self,*args):
-        
-        if len(args) > 0:
-            
-            # If the first two arguments are type float, then they are lat/lon values.
-            if len(args) > 1 and type(args[0]) is float and type(args[1]) is float:
-                self['coords'] = MMLatLon( args[0], args[1] )
-                
-                # If a third argumnt is type int then it is a zoom_factor value.
-                if len(args) > 2 and type(args[2]) is int:
-                    self['zoom_factor'] = args[2]
-            
-            # If the first argument is type str then it is a qs value. Build a MMAddress object with it.
-            if type(args[0]) is str:
-                self['address'] = MMAddress( { 'qs': args[0] })
-            
-            # Otherwise go throuh all arguments and determine their type.
-            else:
-                for arg in args:
-                    if type(arg) is int:
-                        self['zoom_factor'] = arg
-                    elif type(arg) is MMLatLon:
-                        self['coords'] = arg
-                    elif type(arg) is MMRoute:
-                        self['route'] = arg
-                    elif type(arg) is MMAddress:
-                        self['address'] = arg
-                    elif type(arg) is MMSearch:
-                        self['search'] = arg
-                    elif type(arg) is MMBounds:
-                        self['bounds'] = arg
+    """Represents a location that can be plotted on a map or used as a point in a geo-spatial operation.
+    
+    You can create a location by passing in an MMAddress:
+    
+    >>> address = MMAddress(street="134 Oxford Street", city="London", country_code="gb" )
+    >>> location = MMLocation(address=address)
+    
+    Or some coords:
+    
+    >>> coords = MMLatLon(54.65435, -0.045354)
+    >>> location = MMLocation(coords=coords)
+    """
                         
+    def __init__(self, address=None, qs=None, coords=None, zoom_factor=None, route=None, search=None, bounds=None, lat=None, lon=None):
+        if address is not None:
+            self['address'] = address
+        if qs is not None:
+            self['address'] = MMAddress(qs=qs)
+        if coords is not None:
+            self['coords'] = coords
+        if lat is not None and lon is not None:
+            self['coords'] = MMLatLon(lat, lon)
+        if zoom_factor is not None:
+            self['zoom_factor'] = zoom_factor
+        if route is not None:
+            self['route'] = route
+        if search is not None:
+            self['search'] = search
+        if bounds is not None:
+            self['bounds'] = bounds
+        
         
     def to_api_query(self, postfix=''):
         url = {}
@@ -384,7 +421,8 @@ class MMLocation(dict):
             if json.has_key('zoom_factor'):
                 self['zoom_factor'] = json['zoom_factor']
             if json.has_key('address'):
-                self['address'] = MMAddress(json['address'])
+                self['address'] = MMAddress()
+                self['address'].from_json(json['address'])
             if json.has_key('point'):
                 self['coords'] = MMLatLon(json['point']['lat'], json['point']['lon'])
             if json.has_key('bounds'):
@@ -393,6 +431,12 @@ class MMLocation(dict):
 
 
 class MMGeocoder:
+    """Provides access to geocoding functionality.
+    
+    >>> address = MMAddress(postal_code="e174nl")
+    >>> geocoder = MMGeocoder([API_KEY])
+    >>> geocoder.geocoder(address)
+    """
     def __init__( self, dev_key ):
         self.dev_key = dev_key
     
@@ -412,6 +456,12 @@ class MMGeocoder:
         
         
 class MMRoute(dict):
+    """Represents a route between two points with multiple via points.
+    
+    >>> loc1 = MMLocation(qs="london")
+    >>> loc2 = MMLocation(qs="Manchester")
+    >>> route = MMRoute([loc1, loc2])
+    """
     def __init__(self, locations):
         self.locations = locations
         
@@ -457,6 +507,14 @@ class MMRoute(dict):
         return url
         
 class MMRouteRequester:
+    """Provides access to routing functionality.
+    
+    >>> loc1 = MMLocation(qs="london")
+    >>> loc2 = MMLocation(qs="Manchester")
+    >>> route = MMRoute([loc1, loc2])
+    >>> route_requester = MMRouteRequester([API_KEY])
+    >>> route_requester.request(route)
+    """
     def __init__( self, dev_key ):
         self.dev_key = dev_key
         
