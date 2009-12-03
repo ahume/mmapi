@@ -56,53 +56,6 @@ def do_api_request(url):
     except IOError:
         raise MMAPIException, "The url (%s) did not get a response from the server. Copy and paste this url into a browser and check it out." % url
         
-        
-def lat_lon_to_mercator(lat, lon, eccentricity=None):
-    k0 = 1 # Scale factor at the natural origin. Unity in our case.
-    lon0 = 0 # Longitude of the natural origin. Is the prime meridian in our case.
-    
-    # Convert from degrees to radians
-    rlat = float(lat) * ( math.pi / 180 )
-    rlon = float(lon) * ( math.pi / 180 )
-    
-    a = 6378137 # Radius of WGS84 ellipsoid.
-    f = 298.257223563 # Reciprocal flattening of ellipsoid.
-    e = 0.0818191908426215 # Eccentricity of the ellipsoid.
-    
-    if eccentricity:
-        e = eccentricity
-    
-    b1 = ( math.pi / 4 ) + ( rlat / 2 )
-    b1 = math.tan( b1 )
-    
-    if e:
-        b2 = ( 1 - ( e * math.sin( rlat ) ) ) / ( 1 + ( e * math.sin( rlat ) ) )
-        b2 = b2 ** ( e / 2 )
-    else:
-        b2 = 1
-    b = b1 * b2
-    
-    # Only find log if number is greater than zero.
-    if ( b > 0 ):
-        ln = math.log(b)
-    else:
-        ln = 0
-    
-    y = a * k0 * ln
-    x = a * k0 * ( rlon - lon0 )
-    
-    return { 'x': x, 'y': y }
-
-def coord_to_tile(x, y, zoom):
-    world_width = 40075016.0
-    half_world_width = 20037508.0
-    digits = zoom - 1
-    tile_width = float( world_width / ( 2 ** digits ) )
-    x = ( x + half_world_width ) / tile_width
-    y = ( y + half_world_width ) / tile_width
-    return { 'x': x, 'y': y }
-
-
 class MMLatLon(dict):
     """Represents a point as a lat/lon.
     
